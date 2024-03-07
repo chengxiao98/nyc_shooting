@@ -1,0 +1,115 @@
+---
+title: "NYPD Shooting Incident Data (Historic)"
+author: "Chengxiao Yu"
+date: "6/7/2023"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Analysis of NYPD Shooting Incident Data (Historic)
+
+  First, data was loaded from "https://data.cityofnewyork.us/api/views/833y-fsy8/rows.csv?accessType=DOWNLOAD". This is a breakdown of every shooting incident that occurred in NYC going back to 2006 through the end of the previous calendar year. The goal of the analysis is to identify the frequency of shootings in 5 boroughs of NYC during each year and its breakdown percentages in each race.
+
+  The data were tidied by removing variables about the specific locations of the incidents, since they are not needed for my objective in this analysis. The 'OCCUR_DATE' was changed to 'date' format.
+```{r library,include=FALSE}
+library(tidyverse)
+```
+
+```{r load_data}
+url <- "https://data.cityofnewyork.us/api/views/833y-fsy8/rows.csv?accessType=DOWNLOAD"
+data <- read.csv(url)
+data <- data %>% select(-c(X_COORD_CD,Y_COORD_CD,Lon_Lat,INCIDENT_KEY,Latitude, Longitude))
+data$OCCUR_DATE <- as.Date(data$OCCUR_DATE, format = "%m/%d/%Y")
+summary(data)
+```
+### Analysis of shooting incidents in five boroughs
+```{r boro_percentage }
+boro <- c('MANHATTAN','QUEENS','BROOKLYN','BRONX','STATEN ISLAND')
+boro.p <- c()
+for (p in boro){
+  boro.p <- c(boro.p,mean(str_count(data$BORO,p)))
+}
+pie(boro.p, boro, main="Shooting incidents in each borough")
+```
+From, this pie plot, we can see that historically shootings happened in Brooklyn most frequently and Staten Island has the least number of incidents.
+### Analysis of shooting incidents in each year
+```{r year}
+date <- data$OCCUR_DATE
+year <- as.numeric(format(date,format="%Y"))
+x <- seq(from=2006,to=2020,length=15)
+y <- rep(NA,length(x))
+for (i in 1:length(y)){
+  y[i] <- sum(year==x[i])
+}
+plot(x,y,type='l',pch=19,main='Shooting incidents in each year',
+     ylab = 'number of incidents',
+     xlab = 'year')
+points(x,y)
+```
+From this histogram, we can see that in recent 15 years, 2006 had the most incidents. The number of shootings dropped sharply in 2007 and decreased slowly over time until 2020 when there was a significant increase.
+
+### Victim and perpetrator by race
+```{r race}
+race <- data$VIC_RACE[!duplicated(data$VIC_RACE)]
+vic_race <- c()
+perp_race <- c()
+for (r in race){
+  vic_race <- c(vic_race,mean(data$VIC_RACE==r))
+  perp_race <- c(perp_race,mean(data$PERP_RACE==r))
+  perp_race <- perp_race/sum(perp_race)
+}
+
+par(mfrow=c(1,2))
+lab <- c("B","BH","WH","W","API","UN","AIN")
+barplot(height=vic_race,names=lab,cex.names=0.6,main = "victims")
+barplot(height=perp_race,names=lab,cex.names=0.6,main = "perpetrators")
+```
+It's shown from the figure that around 70% of victims and 80% of perpetrators are black. 
+
+
+### Victim and perpetrator by age
+```{r age}
+age_group <- c("<18", "18-24", "25-44", "45-64", "65+", "UNKNOWN")
+vic_age_count <- matrix(0,1,6) 
+for (i in data$VIC_AGE_GROUP){
+  for (j in 1:length(age_group)){
+    if(i==age_group[j]){
+      vic_age_count[j] <- vic_age_count[j] + 1
+    }
+  }
+}
+perp_age_count <- matrix(0,1,6)
+for (i in data$PERP_AGE_GROUP){
+  for (j in 1:length(age_group)){
+    if(i==age_group[j]){
+      perp_age_count[j] <- perp_age_count[j] + 1
+    }
+  }
+}
+par(mfrow=c(1,2))
+barplot(perp_age_count[1:5],names=age_group[1:5],cex.names = 0.6,main = "perpetrator age")
+barplot(vic_age_count[1:5],names=age_group[1:5],cex.names = 0.6,main = "victim age")
+par(mfrow=c(1,1))
+plot(1:100,dpois(1:100,25),type='l',main='Poisson model for age distribution',xlab = 'age',ylab = 'frequency')
+```
+The most frequent age group for perpetrators is 18-24 and the most frequent age group for victims is 25-44. If given the accurate ages, they can be modeled as a Poisson distribution, Poisson(theta), where theta is the mean of the group.
+
+### Possible bias in the analysis
+First, the data itself can be biased. Some variables in the data are "NA", which might decrease or increase the effect of a specific group. 
+Second, the choice I made was biased. I chose these aspects to analyze because I have some prior belief that there should be some trends inside the data. For example, I expect that the number of shootings in 2020 would increase because of the COVID-19 and the election. More data analysis should be done to demonstrate the trend is indeed true.
+
+
+### Summary
+Based on the historical data on shooting incidents of NYC, it's shown that Brooklyn has the most cases. The next step could be to search and analyze data on why this is the case. There could be some demographic or socioeconomic cause for this phenomenon. It's also noticed that black people are significantly overrepresented in both victims and perpetrators groups. We may ask the question that what is the underlying reason for this phenomenon? This could be what we focus on next.
+
+```{r session_info}
+sessionInfo()
+```
+
+
+
