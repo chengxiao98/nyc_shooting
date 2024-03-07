@@ -1,2 +1,4 @@
+![Alt text](img/campbell-jensen-b6hJHLGpPiI-unsplash.jpg?raw=true "nypd")
+![Alt text](img/shooting.jpg?raw=true "trend")
 
 In this project, I delved into the analysis of NYPD shooting incident data from 2006 to the previous year to uncover trends in shooting frequencies across New York City's boroughs, with a particular focus on racial demographics of victims and perpetrators. Utilizing Python and R, I cleaned and processed the data, removing irrelevant variables and standardizing date formats for analysis. My findings, presented through pie charts and histograms, pointed to Brooklyn as the epicenter of shooting incidents, a notable spike in shootings in 2020, and a significant overrepresentation of black individuals in both victim and perpetrator roles. This analysis not only highlighted critical areas for law enforcement and policy focus but also underscored the need for further research into the socioeconomic and demographic factors driving these disparities.
